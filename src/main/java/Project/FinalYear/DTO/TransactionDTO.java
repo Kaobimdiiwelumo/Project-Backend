@@ -1,5 +1,7 @@
 package Project.FinalYear.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class TransactionDTO {
     private String type;
     private double amount;
@@ -9,13 +11,17 @@ public class TransactionDTO {
     private double newbalanceDest;
     private String nameOrig;
     private String nameDest;
+    private String bankOrig;
+    private String bankDest;
+
+
 
     // Default constructor
     public TransactionDTO() {
     }
 
     // Parameterized constructor
-    public TransactionDTO(String type, double amount, double oldbalanceOrg, double newbalanceOrig, double oldbalanceDest, double newbalanceDest, String nameOrig, String nameDest) {
+    public TransactionDTO(String type, double amount, double oldbalanceOrg, double newbalanceOrig, double oldbalanceDest, double newbalanceDest, String nameOrig, String nameDest, String bankOrig, String bankDest) {
         this.type = type;
         this.amount = amount;
         this.oldbalanceOrg = oldbalanceOrg;
@@ -24,6 +30,8 @@ public class TransactionDTO {
         this.newbalanceDest = newbalanceDest;
         this.nameOrig = nameOrig;
         this.nameDest = nameDest;
+        this.bankDest = bankDest;
+        this.bankOrig = bankOrig;
 
 
     }
@@ -82,6 +90,22 @@ public class TransactionDTO {
 
     public void setNewbalanceDest(double newbalanceDest) {
         this.newbalanceDest = newbalanceDest;
+    }
+
+    public String getBankOrig() {
+        return bankOrig;
+    }
+
+    public void setBankOrig(String bankOrig) {
+        this.bankOrig = bankOrig;
+    }
+
+    public String getBankDest() {
+        return bankDest;
+    }
+
+    public void setBankDest(String bankDest) {
+        this.bankDest = bankDest;
     }
 
 }

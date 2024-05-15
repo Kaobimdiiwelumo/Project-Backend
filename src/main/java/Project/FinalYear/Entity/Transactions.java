@@ -17,6 +17,30 @@ public class Transactions {
     private String nameOrig;
     private String nameDest;
 
+    @Column(name = "bank_orig")
+    private String bankOrig;
+
+    @Column(name = "bank_dest")
+    private String bankDest;
+
+    public String getBankOrig() {
+        return bankOrig;
+    }
+
+    public void setBankOrig(String bankOrig) {
+        this.bankOrig = bankOrig;
+    }
+
+    public String getBankDest() {
+        return bankDest;
+    }
+
+    public void setBankDest(String bankDest) {
+        this.bankDest = bankDest;
+    }
+
+
+
     public Long getId() {
         return id;
     }

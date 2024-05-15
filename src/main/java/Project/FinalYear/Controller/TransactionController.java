@@ -24,6 +24,10 @@ public class TransactionController {
             return ResponseEntity.badRequest().body("Transaction blocked due to blacklisted user");
         }
 
+//        // Set bankOrig and bankDest separately (not sent to the model)
+//        String bankOrig = transactionRequest.getBankOrig();
+//        String bankDest = transactionRequest.getBankDest();
+
         // Proceed with processing the transaction
         transactionService.processTransaction(
                 transactionRequest.getType(),
@@ -33,7 +37,10 @@ public class TransactionController {
                 transactionRequest.getOldbalanceDest(),
                 transactionRequest.getNewbalanceDest(),
                 transactionRequest.getNameOrig(),
-                transactionRequest.getNameDest()
+                transactionRequest.getNameDest(),
+                transactionRequest.getBankOrig(),
+                transactionRequest.getBankDest()
+
         );
 
         // Return a response indicating success

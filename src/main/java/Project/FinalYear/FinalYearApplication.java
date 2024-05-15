@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "Project.FinalYear.Repository") // Provide the correct package name
+@EnableJpaRepositories(basePackages = "Project.FinalYear.Repository")
 public class  FinalYearApplication {
 
 	public static void main(String[] args) {

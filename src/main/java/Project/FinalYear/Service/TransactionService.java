@@ -1,18 +1,24 @@
 package Project.FinalYear.Service;
-
 import Project.FinalYear.DTO.TransactionDTO;
 import Project.FinalYear.Entity.Transactions;
 import Project.FinalYear.Repository.TransactionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
+import Project.FinalYear.DTO.TransactionDTO;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 @Service
 public class TransactionService {
@@ -26,7 +32,7 @@ public class TransactionService {
     }
 
 
-    private TransactionDTO createTransaction(String type, double amount, double oldbalanceOrg, double newbalanceOrig, double oldbalanceDest, double newbalanceDest, String nameOrig, String nameDest) {
+    private TransactionDTO createTransaction(String type, double amount, double oldbalanceOrg, double newbalanceOrig, double oldbalanceDest, double newbalanceDest, String nameOrig, String nameDest, String bankOrig,String bankDest ) {
         Transactions transaction = new Transactions();
 
 //        int typeValue = convertTypeToNumber(type);
@@ -39,8 +45,10 @@ public class TransactionService {
         transaction.setNewbalanceDest(newbalanceDest);
         transaction.setNameOrig(nameOrig);
         transaction.setNameDest(nameDest);
+        transaction.setBankOrig(bankOrig);
+        transaction.setBankDest(bankDest);
 
-        TransactionDTO transactionDTO = new TransactionDTO(transaction.getType(),transaction.getAmount(), transaction.getOldbalanceOrg(), transaction.getNewbalanceOrig(), transaction.getNewbalanceOrig(),transaction.getNewbalanceDest(), transaction.getNameOrig(), transaction.getNameDest() );
+        TransactionDTO transactionDTO = new TransactionDTO(transaction.getType(),transaction.getAmount(), transaction.getOldbalanceOrg(), transaction.getNewbalanceOrig(), transaction.getNewbalanceOrig(),transaction.getNewbalanceDest(), transaction.getNameOrig(), transaction.getNameDest(), transaction.getBankOrig(),transaction.getBankDest() );
 
         // Save the transaction to the database (if needed,
         transaction = transactionRepository.save(transaction);
@@ -93,6 +101,8 @@ public class TransactionService {
                 // Interpret the predicted label
                 String interpretation = (predictedLabel == 0) ? "Not Fraud" : "Fraud";
                 System.out.println("Prediction Label: " + interpretation);
+                publishInterpretation(interpretation, transactionDTO);
+
             } else {
                 System.out.println("Error: Unable to extract valid prediction label from the response.");
             }
@@ -100,7 +110,63 @@ public class TransactionService {
             // Handle JSON parsing exception
             e.printStackTrace();
         }
+
     }
+    private void publishInterpretation(String interpretation, TransactionDTO transactionDTO) {
+        String clientId = MqttClient.generateClientId();
+        String topic1 = "mqtt/" + transactionDTO.getBankOrig();
+        String topic2 = "mqtt/" + transactionDTO.getBankDest();
+        int qos = 0;
+
+        Set<String> sentTopics = new HashSet<>();
+
+        try {
+            final MqttClient client = new MqttClient("tcp://localhost:1883", clientId, new MemoryPersistence());
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setUserName("");
+            options.setPassword("".toCharArray());
+            client.connect(options);
+            System.out.println("Connected to MQTT broker...");
+
+            // Construct the message content with interpretation and transaction information
+            StringBuilder messageContent = new StringBuilder();
+            messageContent.append(interpretation).append("\n");
+            messageContent.append("Type: ").append(transactionDTO.getType()).append("\n");
+            messageContent.append("Amount: ").append(transactionDTO.getAmount()).append("\n");
+            messageContent.append("Old Balance Org: ").append(transactionDTO.getOldbalanceOrg()).append("\n");
+            messageContent.append("New Balance Orig: ").append(transactionDTO.getNewbalanceOrig()).append("\n");
+            messageContent.append("Old Balance Dest: ").append(transactionDTO.getOldbalanceDest()).append("\n");
+            messageContent.append("New Balance Dest: ").append(transactionDTO.getNewbalanceDest()).append("\n");
+            messageContent.append("Name Orig: ").append(transactionDTO.getNameOrig()).append("\n");
+            messageContent.append("Name Dest: ").append(transactionDTO.getNameDest());
+
+            MqttMessage message = new MqttMessage(messageContent.toString().getBytes());
+            message.setQos(qos);
+
+            // Publish to the first topic if not already sent
+            if (!sentTopics.contains(topic1)) {
+                client.publish(topic1, message);
+                System.out.println("Interpretation published to topic 1: " + topic1);
+                sentTopics.add(topic1);
+            }
+
+            // Publish to the second topic if not already sent
+            if (!sentTopics.contains(topic2)) {
+                client.publish(topic2, message);
+                System.out.println("Interpretation published to topic 2: " + topic2);
+                sentTopics.add(topic2);
+            }
+
+            client.disconnect();
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
 
 
 
@@ -115,8 +181,9 @@ public class TransactionService {
         }
     }
 
-    public void processTransaction(String type, double amount, double oldbalanceOrg, double newbalanceOrig, double oldbalanceDest, double newbalanceDest,String nameOrig, String nameDest) {
-        TransactionDTO transactionDTO = createTransaction(type, amount, oldbalanceOrg, newbalanceOrig, oldbalanceDest, newbalanceDest, nameOrig, nameDest);
+    public void processTransaction(String type, double amount, double oldbalanceOrg, double newbalanceOrig, double oldbalanceDest, double newbalanceDest,String nameOrig, String nameDest, String bankOrig, String bankDest) {
+        TransactionDTO transactionDTO = createTransaction(type, amount, oldbalanceOrg, newbalanceOrig, oldbalanceDest, newbalanceDest, nameOrig, nameDest, bankOrig,bankDest);
         sendTransactionToFlaskAPI(transactionDTO);
+//        publishInterpretation(transactionDTO);
     }
 }
