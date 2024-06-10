@@ -99,7 +99,7 @@ public class TransactionService {
                 int predictedLabel = predictionNode.asInt();
 
                 // Interpret the predicted label
-                String interpretation = (predictedLabel == 0) ? "Not Fraud" : "Fraud";
+                String interpretation = (predictedLabel == 0) ? "Not Fraud" : "Possible Fraud";
                 System.out.println("Prediction Label: " + interpretation);
                 publishInterpretation(interpretation, transactionDTO);
 
@@ -120,46 +120,48 @@ public class TransactionService {
 
         Set<String> sentTopics = new HashSet<>();
 
-        try {
-            final MqttClient client = new MqttClient("tcp://localhost:1883", clientId, new MemoryPersistence());
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setUserName("");
-            options.setPassword("".toCharArray());
-            client.connect(options);
-            System.out.println("Connected to MQTT broker...");
+        if (interpretation == "Possible Fraud") {
+            try {
+                final MqttClient client = new MqttClient("tcp://localhost:1883", clientId, new MemoryPersistence());
+                MqttConnectOptions options = new MqttConnectOptions();
+                options.setUserName("");
+                options.setPassword("".toCharArray());
+                client.connect(options);
+                System.out.println("Connected to MQTT broker...");
 
-            // Construct the message content with interpretation and transaction information
-            StringBuilder messageContent = new StringBuilder();
-            messageContent.append(interpretation).append("\n");
-            messageContent.append("Type: ").append(transactionDTO.getType()).append("\n");
-            messageContent.append("Amount: ").append(transactionDTO.getAmount()).append("\n");
-            messageContent.append("Old Balance Org: ").append(transactionDTO.getOldbalanceOrg()).append("\n");
-            messageContent.append("New Balance Orig: ").append(transactionDTO.getNewbalanceOrig()).append("\n");
-            messageContent.append("Old Balance Dest: ").append(transactionDTO.getOldbalanceDest()).append("\n");
-            messageContent.append("New Balance Dest: ").append(transactionDTO.getNewbalanceDest()).append("\n");
-            messageContent.append("Name Orig: ").append(transactionDTO.getNameOrig()).append("\n");
-            messageContent.append("Name Dest: ").append(transactionDTO.getNameDest());
+                // Construct the message content with interpretation and transaction information
+                StringBuilder messageContent = new StringBuilder();
+                messageContent.append(interpretation).append("\n");
+                messageContent.append("Type: ").append(transactionDTO.getType()).append("\n");
+                messageContent.append("Amount: ").append(transactionDTO.getAmount()).append("\n");
+                messageContent.append("Old Balance Org: ").append(transactionDTO.getOldbalanceOrg()).append("\n");
+                messageContent.append("New Balance Orig: ").append(transactionDTO.getNewbalanceOrig()).append("\n");
+                messageContent.append("Old Balance Dest: ").append(transactionDTO.getOldbalanceDest()).append("\n");
+                messageContent.append("New Balance Dest: ").append(transactionDTO.getNewbalanceDest()).append("\n");
+                messageContent.append("Name Orig: ").append(transactionDTO.getNameOrig()).append("\n");
+                messageContent.append("Name Dest: ").append(transactionDTO.getNameDest());
 
-            MqttMessage message = new MqttMessage(messageContent.toString().getBytes());
-            message.setQos(qos);
+                MqttMessage message = new MqttMessage(messageContent.toString().getBytes());
+                message.setQos(qos);
 
-            // Publish to the first topic if not already sent
-            if (!sentTopics.contains(topic1)) {
-                client.publish(topic1, message);
-                System.out.println("Interpretation published to topic 1: " + topic1);
-                sentTopics.add(topic1);
+                // Publish to the first topic if not already sent
+                if (!sentTopics.contains(topic1)) {
+                    client.publish(topic1, message);
+                    System.out.println("Interpretation published to topic 1: " + topic1);
+                    sentTopics.add(topic1);
+                }
+
+                // Publish to the second topic if not already sent
+                if (!sentTopics.contains(topic2)) {
+                    client.publish(topic2, message);
+                    System.out.println("Interpretation published to topic 2: " + topic2);
+                    sentTopics.add(topic2);
+                }
+
+                client.disconnect();
+            } catch (MqttException e) {
+                e.printStackTrace();
             }
-
-            // Publish to the second topic if not already sent
-            if (!sentTopics.contains(topic2)) {
-                client.publish(topic2, message);
-                System.out.println("Interpretation published to topic 2: " + topic2);
-                sentTopics.add(topic2);
-            }
-
-            client.disconnect();
-        } catch (MqttException e) {
-            e.printStackTrace();
         }
     }
 
