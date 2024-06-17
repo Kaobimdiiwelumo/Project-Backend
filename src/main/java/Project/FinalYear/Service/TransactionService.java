@@ -57,7 +57,7 @@ public class TransactionService {
     }
     private void sendTransactionToFlaskAPI(TransactionDTO transactionDTO) {
         // Specify the Flask API endpoint
-        String apiEndpoint = "http://localhost:5000/predict";
+        String apiEndpoint = "https://project-model-6lcg.onrender.com/predict";
 
         // Create a RestTemplate to send an HTTP POST request
         RestTemplate restTemplate = new RestTemplate();
