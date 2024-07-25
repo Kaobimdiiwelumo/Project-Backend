@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>Project</groupId>
-	<artifactId>FinalYear</artifactId>
+	<artifactId>TransactionHandler</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>FinalYear</name>
 	<description>Demo project for Spring Boot</description>
@@ -87,6 +87,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.validator</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			<version>8.0.0.Final</version> <!-- Make sure to use a version compatible with your setup -->
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
